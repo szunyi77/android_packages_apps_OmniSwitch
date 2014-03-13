@@ -18,7 +18,10 @@
 package org.omnirom.omniswitch;
 
 import org.omnirom.omniswitch.ui.SwitchGestureView;
+import org.omnirom.omniswitch.ui.BitmapCache;
 
+import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -27,6 +30,7 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.IBinder;
+import android.os.UserHandle;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
@@ -44,14 +48,18 @@ public class SwitchService extends Service {
      */
     private static final String ACTION_SERVICE_STOP = "org.omnirom.omniswitch.ACTION_SERVICE_STOP";
 
+    private static final int START_SERVICE_ERROR_ID = 0;
+
     private SwitchGestureView mGesturePanel;
     private RecentsReceiver mReceiver;
     private SwitchManager mManager;
     private SharedPreferences mPrefs;
     private SharedPreferences.OnSharedPreferenceChangeListener mPrefsListener;
     private SwitchConfiguration mConfiguration;
+    private int mUserId = -1;
 
     private static boolean mIsRunning;
+    private static boolean mNoPermissions;
 
     public static boolean isRunning() {
         return mIsRunning;
@@ -61,8 +69,17 @@ public class SwitchService extends Service {
     public void onCreate() {
         super.onCreate();
 
+        if (mNoPermissions){
+            return;
+        }
+        if (!hasSystemPermission()){
+            createErrorNotification();
+            mNoPermissions = true;
+            return;
+        }
+        mUserId = UserHandle.myUserId();
         mGesturePanel = new SwitchGestureView(this);
-        Log.d(TAG, "started SwitchService");
+        Log.d(TAG, "started SwitchService " + mUserId);
 
         mManager = new SwitchManager(this);
         mConfiguration = SwitchConfiguration.getInstance(this);
@@ -72,14 +89,15 @@ public class SwitchService extends Service {
         filter.addAction(RecentsReceiver.ACTION_SHOW_OVERLAY);
         filter.addAction(RecentsReceiver.ACTION_SHOW_OVERLAY2);
         filter.addAction(RecentsReceiver.ACTION_HIDE_OVERLAY);
-        filter.addAction(RecentsReceiver.ACTION_KILL_ACTIVITY);
         filter.addAction(RecentsReceiver.ACTION_OVERLAY_SHOWN);
         filter.addAction(RecentsReceiver.ACTION_OVERLAY_HIDDEN);
         filter.addAction(RecentsReceiver.ACTION_HANDLE_HIDE);
         filter.addAction(RecentsReceiver.ACTION_HANDLE_SHOW);
         filter.addAction(RecentsReceiver.ACTION_TOGGLE_OVERLAY);
+        filter.addAction(Intent.ACTION_USER_SWITCHED);
 
         registerReceiver(mReceiver, filter);
+        PackageManager.getInstance(this).updatePackageList(false);
 
         mPrefs = PreferenceManager.getDefaultSharedPreferences(this);
         updatePrefs(mPrefs, null);
@@ -96,13 +114,14 @@ public class SwitchService extends Service {
         mIsRunning = true;
 
         Intent startActivity = new Intent(ACTION_SERVICE_START);
-        sendBroadcast(startActivity);
+        startActivity.putExtra(Intent.EXTRA_USER_HANDLE, mUserId);
+        sendBroadcastAsUser(startActivity, UserHandle.ALL);
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Log.d(TAG, "stopped SwitchService");
+        Log.d(TAG, "stopped SwitchService " + mUserId);
 
         mGesturePanel.hide();
         mGesturePanel = null;
@@ -113,8 +132,15 @@ public class SwitchService extends Service {
 
         mIsRunning = false;
 
+        Intent finishActivity = new Intent(MainActivity.ActivityReceiver.ACTION_FINISH);
+        sendBroadcast(finishActivity);
+
         Intent stopActivity = new Intent(ACTION_SERVICE_STOP);
-        sendBroadcast(stopActivity);
+        stopActivity.putExtra(Intent.EXTRA_USER_HANDLE, mUserId);
+        sendBroadcastAsUser(stopActivity, UserHandle.ALL);
+
+        // TODO
+        BitmapCache.getInstance().clear();
     }
 
     @Override
@@ -132,7 +158,6 @@ public class SwitchService extends Service {
         public static final String ACTION_SHOW_OVERLAY = "org.omnirom.omniswitch.ACTION_SHOW_OVERLAY";
         public static final String ACTION_SHOW_OVERLAY2 = "org.omnirom.omniswitch.ACTION_SHOW_OVERLAY2";
         public static final String ACTION_HIDE_OVERLAY = "org.omnirom.omniswitch.ACTION_HIDE_OVERLAY";
-        public static final String ACTION_KILL_ACTIVITY = "org.omnirom.omniswitch.ACTION_KILL_ACTIVITY";
         public static final String ACTION_OVERLAY_SHOWN = "org.omnirom.omniswitch.ACTION_OVERLAY_SHOWN";
         public static final String ACTION_OVERLAY_HIDDEN = "org.omnirom.omniswitch.ACTION_OVERLAY_HIDDEN";
         public static final String ACTION_HANDLE_HIDE = "org.omnirom.omniswitch.ACTION_HANDLE_HIDE";
@@ -164,12 +189,6 @@ public class SwitchService extends Service {
                     sendBroadcast(finishActivity);
                     mManager.hide();
                 }
-            } else if (ACTION_KILL_ACTIVITY.equals(action)) {
-                Intent finishActivity = new Intent(
-                        MainActivity.ActivityReceiver.ACTION_FINISH);
-                sendBroadcast(finishActivity);
-                Intent svc = new Intent(context, SwitchService.class);
-                context.stopService(svc);
             } else if (ACTION_OVERLAY_SHOWN.equals(action)){
                 mGesturePanel.overlayShown();
             } else if (ACTION_OVERLAY_HIDDEN.equals(action)){
@@ -193,6 +212,16 @@ public class SwitchService extends Service {
                             | Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
                     startActivity(mainActivity);
                 }
+            } else if (Intent.ACTION_USER_SWITCHED.equals(action)) {
+                int userId = intent.getIntExtra(Intent.EXTRA_USER_HANDLE, -1);
+                Log.d(TAG, "user switch " + mUserId + "->" + userId);
+                if (userId != mUserId){
+                    mGesturePanel.hide();
+                } else {
+                    if (mConfiguration.mDragHandleShow){
+                        mGesturePanel.show();
+                    }
+                }
             }
         }
     }
@@ -215,5 +244,21 @@ public class SwitchService extends Service {
         if (mIsRunning && mManager.isShowing()) {
             mManager.updateLayout();
         }
+    }
+
+    private boolean hasSystemPermission()
+    {
+        int result = checkCallingOrSelfPermission(android.Manifest.permission.INTERACT_ACROSS_USERS_FULL);
+        return result == android.content.pm.PackageManager.PERMISSION_GRANTED;
+    }
+
+    private void createErrorNotification() {
+        final NotificationManager notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
+        final Notification notifyDetails = new Notification.Builder(this)
+                .setContentTitle("OmniSwitch start failed")
+                .setContentText("Failed to gain system permissions")
+                .setSmallIcon(android.R.drawable.ic_dialog_alert)
+                .build();
+        notificationManager.notify(START_SERVICE_ERROR_ID, notifyDetails);
     }
 }

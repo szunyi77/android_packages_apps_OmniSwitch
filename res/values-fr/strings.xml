@@ -72,4 +72,11 @@
     <string name="drag_handle_opacity_title">Opacité</string>
     <string name="drag_handle_enable_title">Activé</string>
     <string name="drag_handle_enable_summary">Désactivé uniquement si vous utilisez une autre méthode d\'activation</string>
+    <string name="allapps_help">Panneau des applications</string>
+    <string name="allapps">Panneau des applications</string>
+    <string name="dim_behind_title">Dim arrière plan</string>
+    <string name="dim_behind_summary">Appliquer l\'opacité a l\'écran complet</string>
+    <string name="gravity_title">Gravité horizontale</string>
+    <string name="gravity_center">Centre</string>
+    <string name="gravity_drag">Coté de la poignée de glissement</string>
 </resources>

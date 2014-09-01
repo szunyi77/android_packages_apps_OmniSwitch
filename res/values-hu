@@ -64,5 +64,48 @@ Kedvenc alkalmazások."</string>
     <string name="drag_handle_enable_title">Engedélyez</string>
     <string name="drag_handle_enable_summary">Csak akkor tiltja, ha van egy másik aktiválási módszer</string>
     <string name="auto_close">Automatikus bezárás</string>
-    <string name="auto_close_summary">Autómatikusan bezárja, kilövi az alkalmazásokat</string>
+    <string name="auto_close_summary">Automatikusan bezárja, kilövi az alkalmazásokat</string>
+    <string name="allapps_help">Alkalmazás Fiók</string>
+    <string name="allapps">Alkalmazás Fiók</string>
+    <string name="dim_behind_title">Homályos Háttér</string>
+    <string name="dim_behind_summary">A Teljes képernyőn homályosan jelenik meg</string>
+    <string name="gravity_title">Vízszintes gravitáció</string>
+    <string name="gravity_center">Középen</string>
+    <string name="gravity_drag">Fogantyú oldalán</string>
+    <string name="dialog_pick_iconpack_title">Ikon csomag</string>
+    <string name="default_iconpack_title">Alapértelmezett ikonok</string>
+    <string name="icon_packs_title">Ikon csomag</string>
+    <string name="no_iconpacks_summary">Nincs telepitve ikon csomag</string>
+    <string name="icon_pack_title">Ikon csomag</string>
+    <string name="icon_pack_summary">Alkalmazások ikoncsomagjainak használata</string>
+    <string name="category_speed_switcher_title">Gyors kapcsoló</string>
+    <string name="speed_switcher_enable_summary">Nyomja meg hosszan a fogantyút az aktiválásához</string>
+    <string name="speed_switcher_enable_title">Engedélyez</string>
+    <string name="back">Vissza</string>
+    <string name="back_help">Vissza</string>
+    <string name="kill_current">Jelenlegi kilövése</string>
+    <string name="kill_current_help">Kilövi a jelenlegi alkalmazást</string>
+    <string name="speed_switch_color_summary">Kék - Friss alkalmazások Zöld - kedvencek Piros - műveletek</string>
+    <string name="speed_switch_color">Háttérszínek</string>
+    <string name="speed_switch_limit_summary">Változtassa meg a terület határ szintjét</string>
+    <string name="speed_switch_limit">Szint terület változás</string>
+    <string name="speed_switch_button_title">Gombok</string>
+    <string name="speed_switch_button_summary">Konfigurálja a tevékenység gombokat a gyors váltó nézetben</string>
+    <string name="speed_switch_items_summary">Tételeket Maximális száma</string>
+    <string name="speed_switch_item">Tételek határ</string>
+    <string name="sc_quick_switcher_title">Gyors kapcsoló</string>
+    <string name="sc_quick_switcher_body">"
+Fel-le mozgatással szintet válthatunk.
+
+Balra és jobbra mozgatással a tételek között válthatunk."</string>
+    <string name="sc_quick_switcher_empty_body">"
+Nincsenek újabb alkalmazások vagy kedvencek.
+
+Fel-le mozgatással válthatunk szintet.
+
+Balra és jobbra mozgatással a tételek között válthatunk."</string>
+    <string name="immersive_mode">Immerziv mód</string>
+    <string name="immersive_mode_help">Immerziv mód kapcsoló</string>
+    <string name="package_add_favorite_title">Hozzáadás a kedvencekhez</string>
+    <string name="package_remove_favorite_title">Eltávolítás a kedvencek közül</string>
 </resources>
